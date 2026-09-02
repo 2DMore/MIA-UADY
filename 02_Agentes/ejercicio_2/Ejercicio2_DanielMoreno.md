@@ -104,46 +104,46 @@ justifiquen por qué clasificaste el entorno como observable/estocástico/secuen
 - **Performance:** Cantidad de succiedad succionada, distancia recorrida.
 - **Environment:**
 - **Actuators:** Avanzar, rotar, aspirar, esperar
-- **Sensors:** 
+- **Sensors:** Sensor infrarrojo, cámara, giroscopio
 
 ### 3. Sistema de recomendación de streaming
 
 - **Performance:** Exactitud de las respuestas, tiempo utilizado para procesar instrucciones, tiempo de uso por el usuario. 
 - **Environment:**
 - **Actuators:** Buscar música, armar playlist, recomendar canciones
-- **Sensors:**
+- **Sensors:** Historial de reproducción, calificaciones previas, historial de búsqueda.
 
 ### 4. Vehículo autónomo en ciudad
 
 - **Performance:** Distancia recorrida, número de clientes atendidos en un día, calificación por parte de los usuarios, cantidad de gasolina/energía utilizada.
 - **Environment:**
 - **Actuators:** Tocar claxon, rotar el volante, acelerar, frenar, abrir/cerrar puertas, avanzar, dar reversa.
-- **Sensors:**
+- **Sensors:** Sensor infrarrojo, acelerómetro, cámara, giroscopio, GPS, micrófono.
 
 ### 5. Agente de trading algorítmico en bolsa
 
 - **Performance:** Cantidad de dinero ganado, cantidad de acciones compradas, cantidad de operaciones realizadas.
 - **Environment:**
 - **Actuators:** Comprar, vender
-- **Sensors:**
+- **Sensors:** Cierre de mercado diario (API), noticias financieras (scrapping de páginas web)
 
 ### 6. Sistema de diagnóstico médico asistido por IA
 
 - **Performance:** Pacientes diagnosticados correctamente, tiempo de atención al paciente, calificación por parte de los pacientes.
 - **Environment:**
-- **Actuators:** Análisar sintomas, análisar muestras, tomar medidas, realizar preguntas de seguimiento, sacar conclusiones.
-- **Sensors:**
+- **Actuators:** Análisar sintomas, tomar medidas, realizar preguntas de seguimiento, sacar conclusiones.
+- **Sensors:** Cámara, micrófono, báscula, sensor infrarrojo.
 
 ### 7. Dron de inspección de infraestructura
 
 - **Performance:** Calificación por parte del usuario, número de incidencias reportadas, cantidad de errores de los reportes generados.
 - **Environment:**
 - **Actuators:** Ascender, descender, tomar fotografía, tomar un video, enviar reporte/información, rotar, analizar imágenes/cuadros.
-- **Sensors:**
+- **Sensors:** Cámara, sensor infrarrojo, micrófono
 
 ### 8. Agente jugador de ajedrez
 
 - **Performance:** Número de partidas ganadas, tiempo de procesamiento/tomar decisiones
 - **Environment:**
 - **Actuators:** Mover una pieza
-- **Sensors:**
+- **Sensors:** Cámara, cronómetro
