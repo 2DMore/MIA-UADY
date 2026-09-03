@@ -95,55 +95,63 @@ justifiquen por qué clasificaste el entorno como observable/estocástico/secuen
 ### 1. Asistente virtual de voz
 
 - **Performance:** Exactitud de las respuestas, tiempo utilizado para procesar instrucciones, cantidad de instrucciones para poder realizar una peticion. 
-- **Environment:** Parcialmente observable, estocastico, secuencial, dinámico, continuo
+- **Environment:** Voz del usuario, ruido externo.
+Clasificacion AIMA:
 - **Actuators:** Búsqueda web, verificación de fuentes, generar recordatorios, reproducir musica.
 - **Sensors:** Micrófono, red inalámbrica.
 
 ### 2. Robot aspirador doméstico
 
-- **Performance:** Cantidad de succiedad succionada, distancia recorrida.
-- **Environment:**
+- **Performance:** Tiempo sin detectar suciedad, distancia recorrida número de recamaras limpias.
+- **Environment:** Cuartos, baños, puertas, escaleras, personas, mascotas, muebles.
+Clasificacion AIMA:
 - **Actuators:** Avanzar, rotar, aspirar, esperar
 - **Sensors:** Sensor infrarrojo, cámara, giroscopio
 
 ### 3. Sistema de recomendación de streaming
 
 - **Performance:** Exactitud de las respuestas, tiempo utilizado para procesar instrucciones, tiempo de uso por el usuario. 
-- **Environment:**
+- **Environment:** Paquetes de red, perfiles de usuario.
+Clasificacion AIMA:
 - **Actuators:** Buscar música, armar playlist, recomendar canciones
 - **Sensors:** Historial de reproducción, calificaciones previas, historial de búsqueda.
 
 ### 4. Vehículo autónomo en ciudad
 
 - **Performance:** Distancia recorrida, número de clientes atendidos en un día, calificación por parte de los usuarios, cantidad de gasolina/energía utilizada.
-- **Environment:**
+- **Environment:** Calles, automóviles, peatones, clima, topes, baches, señalización, anilmales.
+Clasificacion AIMA:
 - **Actuators:** Tocar claxon, rotar el volante, acelerar, frenar, abrir/cerrar puertas, avanzar, dar reversa.
 - **Sensors:** Sensor infrarrojo, acelerómetro, cámara, giroscopio, GPS, micrófono.
 
 ### 5. Agente de trading algorítmico en bolsa
 
 - **Performance:** Cantidad de dinero ganado, cantidad de acciones compradas, cantidad de operaciones realizadas.
-- **Environment:**
+- **Environment:** Paquetes de red, páginas web.
+Clasificacion AIMA:
 - **Actuators:** Comprar, vender
 - **Sensors:** Cierre de mercado diario (API), noticias financieras (scrapping de páginas web)
 
 ### 6. Sistema de diagnóstico médico asistido por IA
 
 - **Performance:** Pacientes diagnosticados correctamente, tiempo de atención al paciente, calificación por parte de los pacientes.
-- **Environment:**
+- **Environment:** Paciente, consultorio, doctor/enfermero.
+Clasificacion AIMA:
 - **Actuators:** Análisar sintomas, tomar medidas, realizar preguntas de seguimiento, sacar conclusiones.
 - **Sensors:** Cámara, micrófono, báscula, sensor infrarrojo.
 
 ### 7. Dron de inspección de infraestructura
 
 - **Performance:** Calificación por parte del usuario, número de incidencias reportadas, cantidad de errores de los reportes generados.
-- **Environment:**
+- **Environment:** Trabajadores, estructura de la obra, clima, animales.
+Clasificacion AIMA:
 - **Actuators:** Ascender, descender, tomar fotografía, tomar un video, enviar reporte/información, rotar, analizar imágenes/cuadros.
 - **Sensors:** Cámara, sensor infrarrojo, micrófono
 
 ### 8. Agente jugador de ajedrez
 
 - **Performance:** Número de partidas ganadas, tiempo de procesamiento/tomar decisiones
-- **Environment:**
+- **Environment:** Tablero, reloj
+Clasificacion AIMA:
 - **Actuators:** Mover una pieza
 - **Sensors:** Cámara, cronómetro
