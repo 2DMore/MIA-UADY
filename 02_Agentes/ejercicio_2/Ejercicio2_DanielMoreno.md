@@ -96,62 +96,70 @@ justifiquen por qué clasificaste el entorno como observable/estocástico/secuen
 
 - **Performance:** Exactitud de las respuestas, tiempo utilizado para procesar instrucciones, cantidad de instrucciones para poder realizar una peticion. 
 - **Environment:** Voz del usuario, ruido externo.
-Clasificacion AIMA:
+Clasificacion AIMA: Parcialmente observable
 - **Actuators:** Búsqueda web, verificación de fuentes, generar recordatorios, reproducir musica.
 - **Sensors:** Micrófono, red inalámbrica.
+Considero que es parcialmente observable debido a que se depende de un micrófono que detecta sonidos para poder realizar una acción, lo cual no tiene completo control debido a aspectos desconocidos como el ruido.
 
 ### 2. Robot aspirador doméstico
 
 - **Performance:** Tiempo sin detectar suciedad, distancia recorrida número de recamaras limpias.
 - **Environment:** Cuartos, baños, puertas, escaleras, personas, mascotas, muebles.
-Clasificacion AIMA:
+Clasificacion AIMA: Dinámico
 - **Actuators:** Avanzar, rotar, aspirar, esperar
 - **Sensors:** Sensor infrarrojo, cámara, giroscopio
+Considero que es dinámico porque el desempeño del robot cambia conforme pasa el tiempo, cada momento que pasa en lo que el robot decide una acción el entorno puede variar.
 
 ### 3. Sistema de recomendación de streaming
 
 - **Performance:** Exactitud de las respuestas, tiempo utilizado para procesar instrucciones, tiempo de uso por el usuario. 
 - **Environment:** Paquetes de red, perfiles de usuario.
-Clasificacion AIMA:
+Clasificacion AIMA: Discreto
 - **Actuators:** Buscar música, armar playlist, recomendar canciones
 - **Sensors:** Historial de reproducción, calificaciones previas, historial de búsqueda.
+Se considera discreto debido a que las percepciones y las acciones están delimitadas, por lo que tiene un número definido de estados.
 
 ### 4. Vehículo autónomo en ciudad
 
 - **Performance:** Distancia recorrida, número de clientes atendidos en un día, calificación por parte de los usuarios, cantidad de gasolina/energía utilizada.
 - **Environment:** Calles, automóviles, peatones, clima, topes, baches, señalización, anilmales.
-Clasificacion AIMA:
+Clasificacion AIMA: Secuencial
 - **Actuators:** Tocar claxon, rotar el volante, acelerar, frenar, abrir/cerrar puertas, avanzar, dar reversa.
 - **Sensors:** Sensor infrarrojo, acelerómetro, cámara, giroscopio, GPS, micrófono.
+Se considera secuencial debido a que las acciones que realiza no quedan aisladas en una instancia, por ejemplo, el carro debe tomar decisiones de acuerdo a su posición y velocidad que pueden afectar futuras acciones como estacionarse o dar la vuelta en una calle.
 
 ### 5. Agente de trading algorítmico en bolsa
 
 - **Performance:** Cantidad de dinero ganado, cantidad de acciones compradas, cantidad de operaciones realizadas.
 - **Environment:** Paquetes de red, páginas web.
-Clasificacion AIMA:
+Clasificacion AIMA: Episódico
 - **Actuators:** Comprar, vender
 - **Sensors:** Cierre de mercado diario (API), noticias financieras (scrapping de páginas web)
+Considero que es episódico porque las acciones realizables no dependen de las acciones anteriores, en cambio, solo importa realizar una acción cuando se percibe el entorno.
 
 ### 6. Sistema de diagnóstico médico asistido por IA
 
 - **Performance:** Pacientes diagnosticados correctamente, tiempo de atención al paciente, calificación por parte de los pacientes.
 - **Environment:** Paciente, consultorio, doctor/enfermero.
-Clasificacion AIMA:
+Clasificacion AIMA: Estocástico, parcialmente observable.
 - **Actuators:** Análisar sintomas, tomar medidas, realizar preguntas de seguimiento, sacar conclusiones.
 - **Sensors:** Cámara, micrófono, báscula, sensor infrarrojo.
+Se consideraría estocástico y parcialmente observable porque el hecho de realizar un diagnóstico de un paciente no es 100% certero, puede existir aspectos del paciente que no se hayan considerado, lo cual puede afectar el diagnóstico.
 
 ### 7. Dron de inspección de infraestructura
 
 - **Performance:** Calificación por parte del usuario, número de incidencias reportadas, cantidad de errores de los reportes generados.
 - **Environment:** Trabajadores, estructura de la obra, clima, animales.
-Clasificacion AIMA:
+Clasificacion AIMA: Dinámico
 - **Actuators:** Ascender, descender, tomar fotografía, tomar un video, enviar reporte/información, rotar, analizar imágenes/cuadros.
 - **Sensors:** Cámara, sensor infrarrojo, micrófono
+Considero que es dinámico porque el dron tiene que adaptarse a un ambiente que cambia conforme pasa el tiempo, el factor más presente sería el clima o el viento, el cual el dron tiene que adaptarse.
 
 ### 8. Agente jugador de ajedrez
 
 - **Performance:** Número de partidas ganadas, tiempo de procesamiento/tomar decisiones
 - **Environment:** Tablero, reloj
-Clasificacion AIMA:
+Clasificacion AIMA: Observable y determinista
 - **Actuators:** Mover una pieza
 - **Sensors:** Cámara, cronómetro
+Considero que es observable porque el tablero donde se juega el ajedrez contiene toda la información necesaria para poder realizar una acción; además sería determinista porque sabemos como funciona cada pieza y que el estado cambia por las acciones del agente.
