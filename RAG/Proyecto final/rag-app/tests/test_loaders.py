@@ -7,7 +7,7 @@ def test_load_text_reads_utf8_content(tmp_path):
     file_path = tmp_path / "note.md"
     file_path.write_text("# Titulo\nContenido de prueba", encoding="utf-8")
     result = loaders.load_document(file_path)
-    assert result["text"] == "# Titulo\nContenido de prueba"
+    assert result["text"] == "# Titulo\n\nContenido de prueba"
     assert result["source"] == "note.md"
     assert result["title"] == "note"
 

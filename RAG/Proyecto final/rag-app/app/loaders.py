@@ -3,6 +3,8 @@ from pathlib import Path
 from pypdf import PdfReader
 from docx import Document as DocxDocument
 
+from app.clean import clean_text
+
 
 def load_pdf(path: Path) -> str:
     reader = PdfReader(str(path))
@@ -15,7 +17,8 @@ def load_docx(path: Path) -> str:
 
 
 def load_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
+    # Solo texto plano/markdown: suele venir de paginas web con menus y anuncios.
+    return clean_text(path.read_text(encoding="utf-8"))
 
 
 LOADERS = {

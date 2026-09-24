@@ -7,6 +7,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from app.clean import find_boilerplate, drop_lines
 from app.loaders import load_document
 from app.chunk import chunk_text
 from app.embed import Embedder
@@ -64,19 +65,38 @@ def health():
     return {"status": "ok", "chroma_ok": chroma_ok, "indexed_chunks": count, "sources": sources}
 
 
+def corpus_boilerplate() -> frozenset[str]:
+    """Lineas repetidas entre los documentos de texto de DATA_PATH (menus, anuncios)."""
+    texts = []
+    for path in Path(DATA_PATH).glob("*"):
+        if path.suffix.lower() in (".txt", ".md"):
+            try:
+                texts.append(load_document(path)["text"])
+            except Exception:
+                continue
+    return find_boilerplate(texts)
+
+
 @app.post("/ingest")
 async def ingest(files: list[UploadFile] = File(...)):
     documents_indexed = 0
     chunks_indexed = 0
     errors = []
+    saved = []
     for upload in files:
         try:
             dest = Path(DATA_PATH) / upload.filename
             dest.parent.mkdir(parents=True, exist_ok=True)
-            content = await upload.read()
-            dest.write_bytes(content)
+            dest.write_bytes(await upload.read())
+            saved.append((upload.filename, dest))
+        except Exception as exc:
+            errors.append({"file": upload.filename, "error": str(exc)})
+    boilerplate = corpus_boilerplate()
+    for filename, dest in saved:
+        try:
             doc = load_document(dest)
-            chunks = chunk_text(doc["text"], source=doc["source"])
+            text = drop_lines(doc["text"], boilerplate)
+            chunks = chunk_text(text, source=doc["source"])
             if not chunks:
                 continue
             vectors = embedder.embed([c["text"] for c in chunks])
@@ -86,7 +106,7 @@ async def ingest(files: list[UploadFile] = File(...)):
             documents_indexed += 1
             chunks_indexed += len(chunks)
         except Exception as exc:
-            errors.append({"file": upload.filename, "error": str(exc)})
+            errors.append({"file": filename, "error": str(exc)})
     return {"documents_indexed": documents_indexed, "chunks_indexed": chunks_indexed, "errors": errors}
 
 

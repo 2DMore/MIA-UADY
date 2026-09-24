@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dotenv import load_dotenv
 
 from app.chunk import chunk_text
+from app.clean import drop_lines, find_boilerplate
 from app.embed import Embedder
 from app.loaders import load_document
 from app.store import VectorStore
@@ -17,19 +18,21 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 CHROMA_DIR = Path(__file__).resolve().parent.parent / "chroma_calibration"
 
 QUESTIONS = [
-    "Que es la busqueda en anchura (BFS)?",
-    "Que es una funcion de activacion en una red neuronal?",
-    "Que es una capa convolucional?",
-    "Que dice el material sobre los Transformers y los LLMs?",  # impossible question
+    "Quien era Prometeo y por que fue castigado?",  # dominio
+    "Que le ocurrio a Edipo cuando descubrio la verdad sobre su origen?",  # dominio
+    "Que le paso a Narciso segun las Metamorfosis?",  # dominio
+    "Quien es Odin y que papel tiene en Ragnarok?",  # imposible: mitologia nordica
+    "Cual es la capital de Francia?",  # imposible: control sin relacion
 ]
 
 
 def main():
     embedder = Embedder()
     store = VectorStore(str(CHROMA_DIR))
-    for pdf_path in sorted(DATA_DIR.glob("*.pdf")):
-        doc = load_document(pdf_path)
-        chunks = chunk_text(doc["text"], source=doc["source"])
+    docs = [load_document(p) for p in sorted(DATA_DIR.glob("*.txt"))]
+    boilerplate = find_boilerplate([d["text"] for d in docs])
+    for doc in docs:
+        chunks = chunk_text(drop_lines(doc["text"], boilerplate), source=doc["source"])
         if not chunks:
             continue
         vectors = embedder.embed([c["text"] for c in chunks])
