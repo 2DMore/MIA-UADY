@@ -1,0 +1,3 @@
+[client]
+# Oculta el boton Deploy y el menu de tres puntos (no aplican a esta app).
+toolbarMode = "minimal"

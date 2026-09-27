@@ -14,8 +14,9 @@ class VectorStore:
     def add(self, ids: list[str], texts: list[str], embeddings: list[list[float]], metadatas: list[dict]) -> None:
         self._collection.add(ids=ids, documents=texts, embeddings=embeddings, metadatas=metadatas)
 
-    def query(self, embedding: list[float], top_k: int = 3) -> list[dict]:
-        result = self._collection.query(query_embeddings=[embedding], n_results=top_k)
+    def query(self, embedding: list[float], top_k: int = 3, source: str | None = None) -> list[dict]:
+        where = {"source": source} if source else None
+        result = self._collection.query(query_embeddings=[embedding], n_results=top_k, where=where)
         matches = []
         for doc_id, text, metadata, distance in zip(
             result["ids"][0], result["documents"][0], result["metadatas"][0], result["distances"][0]
@@ -27,6 +28,13 @@ class VectorStore:
                 "score": 1 - distance,
             })
         return matches
+
+    def delete_source(self, source: str) -> int:
+        """Borra todos los chunks de un archivo y devuelve cuantos habia."""
+        ids = self._collection.get(where={"source": source})["ids"]
+        if ids:
+            self._collection.delete(ids=ids)
+        return len(ids)
 
     def count(self) -> int:
         return self._collection.count()

@@ -114,7 +114,7 @@ h1, h2, h3 {
 .stButton>button:disabled *,
 [data-testid="stFormSubmitButton"] button:disabled,
 [data-testid="stFormSubmitButton"] button:disabled * {
-    color: #666666 !important;
+    color: #3d3d3d !important;
 }
 
 [data-testid="stSidebar"] .stButton>button {
@@ -186,6 +186,78 @@ h1, h2, h3 {
 hr {
     border-color: #111111 !important;
 }
+
+/* Los iconos Material son ligaduras de una fuente: la regla global de `span`
+   les cambiaba la fuente y se veia el nombre ("delete") encima del icono. */
+[data-testid="stIconMaterial"] {
+    font-family: "Material Symbols Rounded" !important;
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+}
+
+/* Respaldo del toolbarMode: oculta Deploy y el menu de tres puntos. */
+[data-testid="stAppDeployButton"],
+[data-testid="stMainMenu"],
+.stDeployButton {
+    display: none !important;
+}
+
+/* Accesibilidad: interlineado, objetivos tactiles de 44px, foco visible. */
+p, li, label {
+    line-height: 1.5 !important;
+}
+
+.stButton>button,
+[data-testid="stFormSubmitButton"] button,
+[data-testid="stFileUploaderDropzone"] button {
+    min-height: 44px;
+}
+
+button:focus-visible,
+input:focus-visible,
+[role="combobox"]:focus-visible {
+    outline: 3px solid #1a5fb4 !important;
+    outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* Boton de borrar documento: contorno sobre fondo claro, para que el icono se lea. */
+[data-testid="stSidebar"] [class*="st-key-del_"] button {
+    background-color: #ffffff !important;
+    border: 2px solid #111111 !important;
+    box-shadow: none !important;
+    padding: 0 0.5rem;
+    white-space: nowrap;
+}
+
+[data-testid="stSidebar"] [class*="st-key-del_"] button p {
+    font-size: 14px !important;
+}
+
+[data-testid="stSidebar"] li {
+    overflow-wrap: anywhere;
+}
+
+[data-testid="stSidebar"] [class*="st-key-del_"] button,
+[data-testid="stSidebar"] [class*="st-key-del_"] button * {
+    color: #111111 !important;
+}
+
+[data-testid="stSidebar"] [class*="st-key-del_"] button:hover {
+    background-color: #b3261e !important;
+    border-color: #b3261e !important;
+}
+
+[data-testid="stSidebar"] [class*="st-key-del_"] button:hover,
+[data-testid="stSidebar"] [class*="st-key-del_"] button:hover * {
+    color: #ffffff !important;
+}
 </style>
 """
 st.markdown(MINIMAL_CSS, unsafe_allow_html=True)
@@ -207,12 +279,23 @@ with st.sidebar:
     health, health_error = fetch_health()
     if health_error:
         st.error(f"No se pudo conectar a la API: {health_error}")
+    elif not health.get("api_key_configured", True):
+        st.error("Falta GOOGLE_API_KEY en el .env de la API. Configurala y reinicia.")
     elif not health["sources"]:
         st.info("Aun no has ingestado documentos.")
     else:
         st.caption(f"{health['indexed_chunks']} chunks en {len(health['sources'])} documentos")
-        for item in health["sources"]:
-            st.write(f"- {item['source']} ({item['chunks']} chunks)")
+        for index, item in enumerate(health["sources"]):
+            cols = st.columns([5, 3])
+            cols[0].write(f"- {item['source']} ({item['chunks']} chunks)")
+            if cols[1].button("Borrar", key=f"del_{index}", icon=":material/delete:", help="Borrar este documento del indice"):
+                try:
+                    r = httpx.delete(f"{API_URL}/documents", params={"source": item["source"]}, timeout=30)
+                    r.raise_for_status()
+                except httpx.HTTPError as exc:
+                    st.error(f"No se pudo borrar: {exc}")
+                else:
+                    st.rerun()
 
     st.header("Cargar documentos")
     uploaded_files = st.file_uploader(
@@ -249,28 +332,54 @@ with st.sidebar:
             st.warning(f"Errores: {errors}")
         st.rerun()
 
+st.session_state.setdefault("history", [])
+with st.sidebar:
+    if st.session_state["history"] and st.button("Limpiar historico"):
+        st.session_state["history"] = []
+        st.rerun()
+
 st.header("Preguntar")
+source_options = ["Todos"] + [item["source"] for item in (health or {}).get("sources", [])]
 with st.form(key="query_form", clear_on_submit=False):
+    selected_source = st.selectbox("Buscar en", source_options)
     question = st.text_input("Escribe tu pregunta")
     submitted = st.form_submit_button("Enviar pregunta")
 
 if submitted:
     if not question.strip():
         st.warning("Escribe una pregunta antes de enviar.")
+    elif health and not health["sources"]:
+        st.warning("El corpus esta vacio: ingesta documentos antes de preguntar.")
     else:
         try:
-            response = httpx.post(f"{API_URL}/query", json={"question": question}, timeout=60)
+            response = httpx.post(f"{API_URL}/query", json={"question": question, "source": None if selected_source == "Todos" else selected_source}, timeout=60)
             response.raise_for_status()
             body = response.json()
+            st.session_state["history"].insert(0, {"question": question, "source": selected_source, **body})
             if body["abstained"]:
                 st.info(body["answer"])
             else:
                 st.markdown(f"### Respuesta\n{body['answer']}")
                 st.markdown("### Citas")
                 for i, citation in enumerate(body["citations"], start=1):
-                    with st.expander(f"[{i}] {citation['source']} (score: {citation['score']:.2f})"):
+                    with st.expander(f"[{i}] {citation['source']} (score: {citation['score']:.2f})", expanded=True):
                         st.write(citation["text"])
+        except httpx.HTTPStatusError as exc:
+            try:
+                detail = exc.response.json().get("detail", exc)
+            except ValueError:
+                detail = exc
+            st.error(f"La API respondio con error: {detail}")
         except httpx.HTTPError as exc:
             st.error(f"No se pudo conectar a la API: {exc}")
         except KeyError:
             st.error("Respuesta inesperada de la API.")
+
+if st.session_state["history"]:
+    st.header("Historico de la sesion")
+    for entry in st.session_state["history"]:
+        label = f"{entry['question']} ({entry['source']})"
+        with st.expander(label):
+            st.write(entry["answer"])
+            for i, citation in enumerate(entry["citations"], start=1):
+                st.caption(f"[{i}] {citation['source']} (score: {citation['score']:.2f})")

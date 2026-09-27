@@ -3,16 +3,16 @@ import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.clean import find_boilerplate, drop_lines
 from app.loaders import load_document
 from app.chunk import chunk_text
-from app.embed import Embedder
+from app.embed import Embedder, EmbeddingError
 from app.store import VectorStore
-from app.generate import Generator, ABSTENTION_MESSAGE
+from app.generate import Generator, GenerationError, ABSTENTION_MESSAGE
 
 load_dotenv()
 
@@ -37,6 +37,7 @@ generator = Generator()
 class QueryRequest(BaseModel):
     question: str
     top_k: int | None = None
+    source: str | None = None
 
 
 class Citation(BaseModel):
@@ -62,7 +63,22 @@ def health():
         count = 0
         sources = []
         chroma_ok = False
-    return {"status": "ok", "chroma_ok": chroma_ok, "indexed_chunks": count, "sources": sources}
+    return {
+        "status": "ok",
+        "chroma_ok": chroma_ok,
+        "api_key_configured": bool(os.environ.get("GOOGLE_API_KEY")),
+        "indexed_chunks": count,
+        "sources": sources,
+    }
+
+
+def service_unavailable(exc: Exception) -> HTTPException:
+    """503 visible para fallos de Google AI o de Chroma (no son preguntas fuera de dominio)."""
+    if isinstance(exc, (EmbeddingError, GenerationError)) and "GOOGLE_API_KEY" in str(exc):
+        detail = "Falta GOOGLE_API_KEY: configurala en .env y reinicia la API."
+    else:
+        detail = f"Fallo del servicio de Google AI o del indice: {exc}"
+    return HTTPException(status_code=503, detail=detail)
 
 
 def corpus_boilerplate() -> frozenset[str]:
@@ -102,12 +118,21 @@ async def ingest(files: list[UploadFile] = File(...)):
             vectors = embedder.embed([c["text"] for c in chunks])
             ids = [f"{doc['source']}-{c['chunk_index']}-{uuid.uuid4().hex[:8]}" for c in chunks]
             metadatas = [{"source": doc["source"], "chunk_index": c["chunk_index"]} for c in chunks]
+            store.delete_source(doc["source"])  # reindexar: sin duplicados
             store.add(ids=ids, texts=[c["text"] for c in chunks], embeddings=vectors, metadatas=metadatas)
             documents_indexed += 1
             chunks_indexed += len(chunks)
         except Exception as exc:
             errors.append({"file": filename, "error": str(exc)})
     return {"documents_indexed": documents_indexed, "chunks_indexed": chunks_indexed, "errors": errors}
+
+
+@app.delete("/documents")
+def delete_document(source: str):
+    deleted = store.delete_source(source)
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail=f"No hay chunks de '{source}'.")
+    return {"source": source, "deleted_chunks": deleted}
 
 
 @app.post("/query", response_model=QueryResponse)
@@ -118,15 +143,15 @@ def query(request: QueryRequest):
     top_k = request.top_k or DEFAULT_TOP_K
     try:
         vector = embedder.embed([question])[0]
-        matches = store.query(vector, top_k=top_k)
-    except Exception:
-        return QueryResponse(answer=ABSTENTION_MESSAGE, citations=[], abstained=True)
+        matches = store.query(vector, top_k=top_k, source=request.source)
+    except Exception as exc:
+        raise service_unavailable(exc)
     best_score = matches[0]["score"] if matches else 0.0
     if not matches or best_score < MIN_SCORE:
         return QueryResponse(answer=ABSTENTION_MESSAGE, citations=[], abstained=True)
     try:
         answer = generator.generate(question, matches)
-    except Exception:
-        return QueryResponse(answer=ABSTENTION_MESSAGE, citations=[], abstained=True)
+    except Exception as exc:
+        raise service_unavailable(exc)
     citations = [Citation(**m) for m in matches]
     return QueryResponse(answer=answer, citations=citations, abstained=False)

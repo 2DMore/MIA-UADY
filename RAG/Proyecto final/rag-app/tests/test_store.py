@@ -57,3 +57,27 @@ def test_list_sources_groups_chunk_counts_by_source(tmp_path):
         {"source": "a.pdf", "chunks": 2},
         {"source": "b.pdf", "chunks": 1},
     ]
+
+
+def _two_sources(tmp_path):
+    store = VectorStore(str(tmp_path))
+    store.add(
+        ids=["a1", "a2", "b1"],
+        texts=["a", "aa", "b"],
+        embeddings=[[1.0, 0.0], [0.9, 0.1], [1.0, 0.1]],
+        metadatas=[{"source": "a.md"}, {"source": "a.md"}, {"source": "b.md"}],
+    )
+    return store
+
+
+def test_query_filters_by_source(tmp_path):
+    store = _two_sources(tmp_path)
+    results = store.query(embedding=[1.0, 0.0], top_k=5, source="b.md")
+    assert [r["source"] for r in results] == ["b.md"]
+
+
+def test_delete_source_removes_only_that_document(tmp_path):
+    store = _two_sources(tmp_path)
+    assert store.delete_source("a.md") == 2
+    assert store.count() == 1
+    assert store.delete_source("a.md") == 0

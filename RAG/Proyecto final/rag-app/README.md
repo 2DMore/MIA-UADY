@@ -5,12 +5,18 @@ espanol de tragedia griega y poesia de Ovidio, tomados de Project Gutenberg.
 
 ## Setup
 
-1. `python -m venv venv && ./venv/Scripts/pip install -r requirements.txt`
+1. Crea el entorno virtual e instala dependencias:
+   - Linux / macOS: `python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt`
+   - Windows (PowerShell): `python -m venv venv; .\venv\Scripts\Activate.ps1; pip install -r requirements.txt`
 2. Copia `.env.example` a `.env` y coloca tu clave de
    [Google AI Studio](https://aistudio.google.com/apikey) en `GOOGLE_API_KEY`.
 3. Ajusta `MIN_SCORE` en `.env` (ver seccion Abstencion).
 
 ## Levantar el sistema
+
+Con el entorno virtual activado (paso 1), en la carpeta `rag-app/`. Los
+comandos son iguales en Linux, macOS y Windows. Tambien puedes usar Docker
+(ver "Con Docker" al final).
 
 Terminal 1:
 ```
@@ -30,10 +36,18 @@ los archivos deben estar en `data/` antes de ingerir; suben desde ahi.
 
 ## Probar la API directamente
 
+Linux / macOS (bash o zsh):
 ```
 curl http://localhost:8000/health
 curl -X POST http://localhost:8000/query -H "Content-Type: application/json" \
   -d '{"question": "Quien era Prometeo y por que fue castigado?"}'
+```
+
+Windows (PowerShell; `curl` es un alias de otro comando, usa `Invoke-RestMethod`):
+```
+Invoke-RestMethod http://localhost:8000/health
+Invoke-RestMethod -Method Post -Uri http://localhost:8000/query -ContentType "application/json" `
+  -Body '{"question": "Quien era Prometeo y por que fue castigado?"}'
 ```
 
 O usa `http://localhost:8000/docs` (Swagger UI) — expone `/health`,
@@ -133,7 +147,7 @@ preguntas muy genericas del dominio podrian acercarse al umbral.
 
 ## Verificacion
 
-- Suite automatizada: 40 tests pasando (`pytest`), sin llamadas de red
+- Suite automatizada: 45 tests pasando (`pytest`), sin llamadas de red
   (loaders, limpieza, chunk, embed, generate, store con fakes; main.py con
   monkeypatching de los clientes).
 - Calibracion de `MIN_SCORE` con el corpus nuevo: hecha (ver Abstencion).
@@ -153,3 +167,34 @@ preguntas muy genericas del dominio podrian acercarse al umbral.
 - **Pendiente:** evidencias visuales (capturas de Streamlit con citas y scores,
   la misma pregunta en `/docs`, y la pregunta fuera de dominio) y el reporte
   de una pagina.
+
+## Retos opcionales implementados
+
+- **Filtro por `source`:** `POST /query` acepta `source` (opcional); la UI
+  tiene un selector "Buscar en". Usa `where={"source": ...}` de Chroma.
+- **Borrar / reindexar:** `DELETE /documents?source=archivo.txt` borra los
+  chunks de un archivo (boton en la barra lateral). `/ingest` borra los chunks
+  previos del mismo archivo antes de agregarlos, asi reingerir = reindexar y
+  no duplica.
+- **Historico:** lista de preguntas de la sesion de Streamlit (se pierde al
+  recargar la pagina).
+
+- **Docker Compose:** API y UI en dos servicios (misma imagen, `Dockerfile`).
+
+### Con Docker (Windows, Linux y macOS)
+
+Desde la carpeta `rag-app/` (donde esta `docker-compose.yml`):
+
+```
+cp .env.example .env        # (Windows cmd: copy .env.example .env) y coloca tu GOOGLE_API_KEY
+docker compose up --build   # API en :8000, UI en :8501
+docker compose down         # detener
+```
+
+`chroma/` y `data/` se montan como volumenes, asi que el indice persiste entre
+reinicios. La UI llama a la API con `API_URL=http://api:8000` (red interna de
+Compose); fuera de Docker usa `http://localhost:8000` por defecto. Verificado
+con Docker Desktop 29.8 en Windows: `/health` (827 chunks leidos del indice
+existente), consulta con citas, abstencion y reinicio del servicio `api`.
+No probado en Linux ni macOS (la imagen es `python:3.13-slim`). En Linux,
+los archivos que el contenedor cree en `chroma/` y `data/` quedan con dueno root.
